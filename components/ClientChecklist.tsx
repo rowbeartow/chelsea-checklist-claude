@@ -9,6 +9,7 @@ import {
   Home,
   Lock,
   MessageCircle,
+  Phone,
   UserRound
 } from "lucide-react";
 import { getJourneyLabel, getProgress, resolveRecommendations } from "@/lib/checklist";
@@ -38,13 +39,28 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
   const initialStageId = visibleStages.find((stage) => stage.isCurrent)?.id ?? visibleStages[0]?.id ?? checklist.stages[0]?.id;
   const [selectedStageId, setSelectedStageId] = useState(initialStageId);
   const [openStage, setOpenStage] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [openTasks, setOpenTasks] = useState<Record<string, boolean>>(() => {
     const firstTask = checklist.stages.flatMap((stage) => stage.tasks)[0];
     return firstTask ? { [firstTask.id]: true } : {};
   });
-  const [checkedTasks, setCheckedTasks] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(checklist.stages.flatMap((stage) => stage.tasks).map((task) => [task.id, task.isComplete]))
-  );
+  const storageKey = `checklist-progress-${checklist.privateLinkToken}`;
+  const [checkedTasks, setCheckedTasks] = useState<Record<string, boolean>>(() => {
+    const base = Object.fromEntries(
+      checklist.stages.flatMap((stage) => stage.tasks).map((task) => [task.id, task.isComplete])
+    );
+
+    if (typeof window === "undefined") {
+      return base;
+    }
+
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? { ...base, ...(JSON.parse(saved) as Record<string, boolean>) } : base;
+    } catch {
+      return base;
+    }
+  });
 
   useEffect(() => {
     if (visibleStages.some((stage) => stage.id === selectedStageId)) {
@@ -156,54 +172,70 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
-          <aside className="rounded-lg border border-line bg-white p-3 shadow-soft">
-            <div className="mb-3 flex items-center gap-2 px-2 pt-1 text-sm font-bold text-ink/72">
-              <ClipboardList className="h-4 w-4" />
-              Stages
-            </div>
-            <nav className="grid gap-2">
-              {visibleStages.map((stage) => {
-                const visibleIndex = visibleStages.findIndex((visibleStage) => visibleStage.id === stage.id);
-                const taskCount = stage.tasks.length;
-                const completeCount = stage.tasks.filter((task) => checkedTasks[task.id]).length;
+          <aside>
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-lg border border-line bg-white px-4 py-3 text-sm font-bold shadow-soft lg:hidden"
+            >
+              <span className="flex items-center gap-2 text-ink/72">
+                <ClipboardList className="h-4 w-4" />
+                {selectedStage?.title ?? "Stages"}
+              </span>
+              <ChevronRight className={clsx("h-4 w-4 text-ink/50 transition", mobileNavOpen && "rotate-90")} />
+            </button>
 
-                return (
-                  <button
-                    key={stage.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedStageId(stage.id);
-                      setOpenStage(false);
-                    }}
-                    className={clsx(
-                      "grid grid-cols-[28px_1fr] gap-3 rounded-md border px-3 py-3 text-left transition",
-                      selectedStageId === stage.id
-                        ? "border-accent bg-white shadow-sm"
-                        : "border-transparent hover:border-line hover:bg-cloud"
-                    )}
-                  >
-                    <span
+            <div className={clsx("mt-2 rounded-lg border border-line bg-white p-3 shadow-soft lg:mt-0 lg:block", !mobileNavOpen && "hidden")}>
+              <div className="mb-3 hidden items-center gap-2 px-2 pt-1 text-sm font-bold text-ink/72 lg:flex">
+                <ClipboardList className="h-4 w-4" />
+                Stages
+              </div>
+              <nav className="grid gap-2">
+                {visibleStages.map((stage) => {
+                  const visibleIndex = visibleStages.findIndex((visibleStage) => visibleStage.id === stage.id);
+                  const taskCount = stage.tasks.length;
+                  const completeCount = stage.tasks.filter((task) => checkedTasks[task.id]).length;
+                  const allDone = taskCount > 0 && completeCount === taskCount;
+
+                  return (
+                    <button
+                      key={stage.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedStageId(stage.id);
+                        setOpenStage(false);
+                        setMobileNavOpen(false);
+                      }}
                       className={clsx(
-                        "flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold",
+                        "grid grid-cols-[28px_1fr] gap-3 rounded-md border px-3 py-3 text-left transition",
                         selectedStageId === stage.id
-                          ? "border border-accent bg-white text-accent"
-                          : stage.isCurrent
-                            ? "border border-accent bg-white text-accent"
-                            : "bg-cloud text-ink/70"
+                          ? "border-accent bg-white shadow-sm"
+                          : "border-transparent hover:border-line hover:bg-cloud"
                       )}
                     >
-                      {visibleIndex + 1}
-                    </span>
-                    <span>
-                      <span className="block text-sm font-bold">{stage.title}</span>
-                      <span className="mt-1 block text-xs text-ink/62">
-                        {completeCount} of {taskCount} tasks
+                      <span
+                        className={clsx(
+                          "flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold",
+                          allDone
+                            ? "bg-success text-white"
+                            : selectedStageId === stage.id || stage.isCurrent
+                              ? "border border-accent bg-white text-accent"
+                              : "bg-cloud text-ink/70"
+                        )}
+                      >
+                        {allDone ? <Check className="h-4 w-4" /> : visibleIndex + 1}
                       </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
+                      <span>
+                        <span className="block text-sm font-bold">{stage.title}</span>
+                        <span className="mt-1 block text-xs text-ink/62">
+                          {completeCount} of {taskCount} tasks
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
           </aside>
 
           <section className="rounded-lg border border-line bg-white p-4 shadow-soft sm:p-5">
@@ -246,7 +278,15 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                       <button
                         type="button"
                         aria-label={isChecked ? `Mark ${task.title} incomplete` : `Mark ${task.title} complete`}
-                        onClick={() => setCheckedTasks((value) => ({ ...value, [task.id]: !isChecked }))}
+                        onClick={() =>
+                          setCheckedTasks((value) => {
+                            const next = { ...value, [task.id]: !isChecked };
+                            try {
+                              localStorage.setItem(storageKey, JSON.stringify(next));
+                            } catch {}
+                            return next;
+                          })
+                        }
                         className={clsx(
                           "flex items-center justify-center border-r border-line transition",
                           isChecked ? "bg-success text-white" : "bg-cloud text-ink/40 hover:text-ink"
@@ -276,9 +316,14 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                       <div className="detail-panel border-t border-line px-4 py-4 sm:pl-[60px]">
                         <RichContent html={task.richContent.html} />
                         {task.callChelseaNote ? (
-                          <div className="mt-4 rounded-lg border border-line bg-white p-3 text-sm leading-6 text-ink/72">
-                            <strong className="text-ink">When to call Chelsea: </strong>
-                            {task.callChelseaNote}
+                          <div className="mt-4 flex gap-3 rounded-lg border border-accent/30 bg-accentSoft p-3">
+                            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-accent/35 bg-white text-accent">
+                              <Phone className="h-3.5 w-3.5" />
+                            </div>
+                            <div className="text-sm leading-6">
+                              <span className="font-bold text-accent">Call Chelsea: </span>
+                              <span className="text-ink/78">{task.callChelseaNote}</span>
+                            </div>
                           </div>
                         ) : null}
                         {recommendations.length ? (
