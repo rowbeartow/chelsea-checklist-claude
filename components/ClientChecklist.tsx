@@ -267,7 +267,24 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
             ) : null}
 
             <div className="mt-5 grid gap-3">
-              {selectedStage.tasks.map((task) => {
+              {(() => {
+                const stageTasks = selectedStage.tasks;
+                const stageComplete = stageTasks.length > 0 && stageTasks.every((t) => checkedTasks[t.id]);
+
+                return (
+                  <>
+                    {stageComplete ? (
+                      <div className="flex items-center gap-3 rounded-lg border border-success/40 bg-successSoft px-4 py-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success text-white">
+                          <Check className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-success">Stage complete</p>
+                          <p className="text-xs text-success/80">All tasks in this stage are done.</p>
+                        </div>
+                      </div>
+                    ) : null}
+                    {stageTasks.map((task) => {
                 const isOpen = Boolean(openTasks[task.id]);
                 const isChecked = Boolean(checkedTasks[task.id]);
                 const recommendations = resolveRecommendations(task.vendorRecommendations);
@@ -284,6 +301,15 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                             try {
                               localStorage.setItem(storageKey, JSON.stringify(next));
                             } catch {}
+                            fetch("/api/progress", {
+                              method: "POST",
+                              headers: { "content-type": "application/json" },
+                              body: JSON.stringify({
+                                token: checklist.privateLinkToken,
+                                taskId: task.id,
+                                isComplete: !isChecked
+                              })
+                            }).catch(() => {});
                             return next;
                           })
                         }
@@ -300,8 +326,15 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                         className="grid grid-cols-[1fr_auto_auto] items-center gap-3 px-3 py-3 text-left hover:bg-cloud sm:px-4"
                       >
                         <span>
-                          <span className={clsx("block text-sm font-bold", isChecked && "text-ink/50 line-through")}>
-                            {task.title}
+                          <span className="flex flex-wrap items-center gap-2">
+                            <span className={clsx("text-sm font-bold", isChecked && "text-ink/50 line-through")}>
+                              {task.title}
+                            </span>
+                            {!task.isRequired ? (
+                              <span className="rounded-full border border-line bg-cloud px-2 py-0.5 text-[10px] font-bold uppercase text-ink/50">
+                                Optional
+                              </span>
+                            ) : null}
                           </span>
                           <span className="mt-1 block text-xs leading-5 text-ink/62">{task.helperText}</span>
                         </span>
@@ -334,6 +367,9 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                   </article>
                 );
               })}
+                  </>
+                );
+              })()}
             </div>
           </section>
         </div>

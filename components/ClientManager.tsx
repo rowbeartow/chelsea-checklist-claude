@@ -144,7 +144,7 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
         <p className="text-sm font-semibold text-accent">Client checklists</p>
         <h1 className="mt-1 text-2xl font-semibold">Create from templates</h1>
         <p className="mt-2 text-sm leading-6 text-ink/68">
-          This creates a local checklist snapshot from the selected master template flow. Supabase persistence comes next.
+          Create a checklist from the buyer or seller template and share the private link with your client.
         </p>
 
         <form className="mt-5 grid gap-4" onSubmit={createClient}>
@@ -255,7 +255,7 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
                 <span className="rounded-md bg-cloud px-2 py-1">
                   {client.stages.reduce((count, stage) => count + stage.tasks.length, 0)} tasks
                 </span>
-                <span className="rounded-md bg-warningSoft px-2 py-1 text-warning">Local snapshot</span>
+                <span className="rounded-md bg-cloud px-2 py-1 capitalize">{client.journeyType.replace("_", " + ")} journey</span>
               </div>
             </article>
           ))}

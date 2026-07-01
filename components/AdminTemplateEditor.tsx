@@ -401,11 +401,10 @@ export function AdminTemplateEditor({
           <header className="rounded-lg border border-line bg-white p-5 shadow-soft">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div>
-                <p className="text-sm font-semibold text-accent">Phase 2A</p>
+                <p className="text-sm font-semibold text-accent">Admin</p>
                 <h1 className="mt-1 text-3xl font-semibold">Template editor</h1>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-ink/68">
-                  Local editing is active here: Chelsea can shape buyer and seller master templates, add and reorder stages
-                  and tasks, archive old content, and preview rich detail blocks. Supabase persistence comes next.
+                  Edit buyer and seller master templates — add, reorder, or archive stages and tasks, update content, and preview how it looks to clients.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -435,7 +434,7 @@ export function AdminTemplateEditor({
               ) : (
                 <span className="rounded-md bg-successSoft px-2 py-1 text-success">Signed in as admin</span>
               )}
-              <span className="rounded-md bg-warningSoft px-2 py-1 text-warning">Template edits are local state</span>
+              <span className="rounded-md bg-warningSoft px-2 py-1 text-warning">Edits are local until Supabase is connected</span>
               {lastSavedAt ? (
                 <span className="rounded-md bg-successSoft px-2 py-1 text-success">Local draft saved at {lastSavedAt}</span>
               ) : null}
