@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
 import {
   Check,
@@ -192,52 +192,59 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
             </button>
 
             <div className={clsx("mt-2 rounded-lg border border-line bg-white p-3 shadow-soft lg:mt-0 lg:block", !mobileNavOpen && "hidden")}>
-              <div className="mb-3 hidden items-center gap-2 px-2 pt-1 text-sm font-bold text-ink/72 lg:flex">
-                <ClipboardList className="h-4 w-4" />
-                Stages
-              </div>
-              <nav className="grid gap-2">
-                {visibleStages.map((stage) => {
-                  const visibleIndex = visibleStages.findIndex((visibleStage) => visibleStage.id === stage.id);
+              <nav className="grid gap-1">
+                {visibleStages.map((stage, visibleIndex) => {
                   const taskCount = stage.tasks.length;
                   const completeCount = stage.tasks.filter((task) => checkedTasks[task.id]).length;
                   const allDone = taskCount > 0 && completeCount === taskCount;
 
                   return (
-                    <button
-                      key={stage.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedStageId(stage.id);
-                        setOpenStage(false);
-                        setMobileNavOpen(false);
-                      }}
-                      className={clsx(
-                        "grid grid-cols-[28px_1fr] gap-3 rounded-md border px-3 py-3 text-left transition",
-                        selectedStageId === stage.id
-                          ? "border-accent bg-white shadow-sm"
-                          : "border-transparent hover:border-line hover:bg-cloud"
-                      )}
-                    >
-                      <span
+                    <Fragment key={stage.id}>
+                      {visibleIndex === 0 ? (
+                        <p className="flex items-center gap-1.5 px-2 pb-1 pt-1 text-[10px] font-bold uppercase tracking-wider text-ink/45">
+                          <ClipboardList className="h-3 w-3" />
+                          Get started
+                        </p>
+                      ) : visibleIndex === 1 ? (
+                        <p className="flex items-center gap-1.5 px-2 pb-1 pt-3 text-[10px] font-bold uppercase tracking-wider text-ink/45">
+                          <ClipboardList className="h-3 w-3" />
+                          Stages
+                        </p>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedStageId(stage.id);
+                          setOpenStage(false);
+                          setMobileNavOpen(false);
+                        }}
                         className={clsx(
-                          "flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold",
-                          allDone
-                            ? "bg-success text-white"
-                            : selectedStageId === stage.id || stage.isCurrent
-                              ? "border border-accent bg-white text-accent"
-                              : "bg-cloud text-ink/70"
+                          "grid grid-cols-[28px_1fr] gap-3 rounded-md border px-3 py-3 text-left transition",
+                          selectedStageId === stage.id
+                            ? "border-accent bg-white shadow-sm"
+                            : "border-transparent hover:border-line hover:bg-cloud"
                         )}
                       >
-                        {allDone ? <Check className="h-4 w-4" /> : visibleIndex + 1}
-                      </span>
-                      <span>
-                        <span className="block text-sm font-bold">{stage.title}</span>
-                        <span className="mt-1 block text-xs text-ink/62">
-                          {completeCount} of {taskCount} tasks
+                        <span
+                          className={clsx(
+                            "flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold",
+                            allDone
+                              ? "bg-success text-white"
+                              : selectedStageId === stage.id || stage.isCurrent
+                                ? "border border-accent bg-white text-accent"
+                                : "bg-cloud text-ink/70"
+                          )}
+                        >
+                          {allDone ? <Check className="h-4 w-4" /> : visibleIndex + 1}
                         </span>
-                      </span>
-                    </button>
+                        <span>
+                          <span className="block text-sm font-bold">{stage.title}</span>
+                          <span className="mt-1 block text-xs text-ink/62">
+                            {completeCount} of {taskCount} tasks
+                          </span>
+                        </span>
+                      </button>
+                    </Fragment>
                   );
                 })}
               </nav>
@@ -268,43 +275,6 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                 <RichContent html={selectedStage.richContent.html} />
                 {resolveRecommendations(selectedStage.vendorRecommendations).length ? (
                   <VendorSection recommendations={selectedStage.vendorRecommendations} title="Recommended for this stage" />
-                ) : null}
-              </div>
-            ) : null}
-
-            {needsAgreement && visibleStages[0]?.id === selectedStage?.id ? (
-              <div className="mt-5 overflow-hidden rounded-lg bg-ink">
-                <div className="p-5 sm:p-6">
-                  <div className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-white">
-                      C
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-white/45">A note from Chelsea</p>
-                      <p className="mt-1.5 text-base font-semibold leading-snug text-white sm:text-lg">
-                        {checklist.clientName.split(" ")[0]}, this is where we start.
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-white/68">
-                        I built this checklist to walk you through the home buying process step by step. Before I can show you homes, Washington state law requires a signed Buyer Brokerage Services Agreement — this stage explains what that means and why it actually protects you as the buyer.
-                      </p>
-                      <p className="mt-1.5 text-sm leading-6 text-white/68">
-                        Read through the steps below. When you&apos;re ready, you&apos;ll find the agreement link in Step 4 — or use the button at the bottom of this page.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                {checklist.agreementLink ? (
-                  <div className="border-t border-white/10 bg-white/5 px-5 py-3 sm:px-6">
-                    <a
-                      href={checklist.agreementLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent/90"
-                    >
-                      Sign the buyer agreement
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  </div>
                 ) : null}
               </div>
             ) : null}
