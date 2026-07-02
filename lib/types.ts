@@ -41,6 +41,7 @@ export type ChecklistTask = {
   sortOrder: number;
   isComplete: boolean;
   vendorRecommendations: VendorRecommendation[];
+  taskRole?: "sign_agreement";
 };
 
 export type ChecklistStage = {
@@ -63,6 +64,8 @@ export type ClientChecklist = {
   journeyType: ClientJourneyType;
   status: "active" | "archived";
   stages: ChecklistStage[];
+  agreementLink?: string;
+  agreementSigned?: boolean;
 };
 
 export type MasterTemplate = {

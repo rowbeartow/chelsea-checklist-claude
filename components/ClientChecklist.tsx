@@ -6,6 +6,7 @@ import {
   Check,
   ChevronRight,
   ClipboardList,
+  ExternalLink,
   Home,
   Lock,
   MessageCircle,
@@ -90,6 +91,11 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
 
   const currentStage = visibleStages.find((stage) => stage.isCurrent) ?? visibleStages[0] ?? checklist.stages[0];
 
+  const needsAgreement =
+    !checklist.agreementSigned &&
+    (checklist.journeyType === "buyer" || checklist.journeyType === "buyer_seller") &&
+    checklist.stages.some((stage) => stage.tasks.some((task) => task.taskRole === "sign_agreement"));
+
   return (
     <main className="min-h-screen bg-cloud px-4 py-5 text-ink sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
@@ -170,6 +176,30 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
             </a>
           </div>
         </header>
+
+        {needsAgreement ? (
+          <div className="flex flex-col gap-3 rounded-lg border border-accent/30 bg-accentSoft px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+              <p className="text-sm leading-6 text-ink/80">
+                <span className="font-bold text-accent">Before Chelsea can show you homes</span> — Washington law requires a signed Buyer Brokerage Services Agreement. Stage 1 walks you through what it covers and why it's required.
+              </p>
+            </div>
+            {checklist.agreementLink ? (
+              <a
+                href={checklist.agreementLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex shrink-0 items-center gap-2 rounded-md border border-accent bg-white px-4 py-2 text-sm font-bold text-accent hover:bg-white/80"
+              >
+                Sign now
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            ) : (
+              <span className="shrink-0 text-xs font-semibold text-accent/80">Chelsea will send the Authentisign link by email</span>
+            )}
+          </div>
+        ) : null}
 
         <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
           <aside>
@@ -348,6 +378,29 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                     {isOpen ? (
                       <div className="detail-panel border-t border-line px-4 py-4 sm:pl-[60px]">
                         <RichContent html={task.richContent.html} />
+                        {task.taskRole === "sign_agreement" ? (
+                          <div className="mt-4 rounded-lg border border-accent/30 bg-accentSoft p-4">
+                            <p className="text-sm font-bold text-accent">Ready to sign?</p>
+                            {checklist.agreementLink ? (
+                              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <a
+                                  href={checklist.agreementLink}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-2 rounded-md border border-accent bg-white px-4 py-2 text-sm font-bold text-accent hover:bg-white/80"
+                                >
+                                  Sign with Chelsea via Authentisign
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </a>
+                                <span className="text-xs text-ink/60">Takes about two minutes</span>
+                              </div>
+                            ) : (
+                              <p className="mt-1 text-sm text-ink/72">
+                                Chelsea will send the agreement to your email via Authentisign. Check your inbox — it takes about two minutes to complete.
+                              </p>
+                            )}
+                          </div>
+                        ) : null}
                         {task.callChelseaNote ? (
                           <div className="mt-4 flex gap-3 rounded-lg border border-accent/30 bg-accentSoft p-3">
                             <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-accent/35 bg-white text-accent">

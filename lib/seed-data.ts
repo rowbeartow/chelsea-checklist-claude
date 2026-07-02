@@ -120,11 +120,12 @@ const buyerStages: ClientChecklist["stages"] = [
       {
         id: "tpl-buyer-ca-4",
         title: "Sign the agreement",
-        helperText: "Sent separately for e-signature.",
-        richContent: rich(`<p>Once you've reviewed everything and your questions are answered, the agreement is sent separately for e-signature. This is what formally starts our working relationship.</p>`),
+        helperText: "Sent via Authentisign — takes about two minutes.",
+        richContent: rich(`<p>Once you've reviewed everything and your questions are answered, the agreement is sent separately for e-signature via Authentisign. This is what formally starts our working relationship — and what allows Chelsea to legally show you homes under Washington state law.</p>`),
         isRequired: true,
         sortOrder: 4,
         isComplete: false,
+        taskRole: "sign_agreement",
         vendorRecommendations: []
       }
     ]
@@ -709,11 +710,12 @@ const sellerStages: ClientChecklist["stages"] = [
       {
         id: "tpl-seller-ca-4",
         title: "Sign the Listing Agreement",
-        helperText: "Sent separately for e-signature.",
-        richContent: rich(`<p>Once you've reviewed everything and your questions are answered, the listing agreement is sent separately for e-signature. This is what formally authorizes me to represent you and market the home.</p>`),
+        helperText: "Sent via Authentisign — takes about two minutes.",
+        richContent: rich(`<p>Once you've reviewed everything and your questions are answered, the listing agreement is sent separately for e-signature via Authentisign. This is what formally authorizes Chelsea to represent you and market your home.</p>`),
         isRequired: true,
         sortOrder: 4,
         isComplete: false,
+        taskRole: "sign_agreement",
         vendorRecommendations: []
       }
     ]
