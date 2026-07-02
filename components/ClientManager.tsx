@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, Copy, ExternalLink, Link2, Plus } from "lucide-react";
+import { Check, Copy, ExternalLink, Link2, Plus, Search, X } from "lucide-react";
 import { getJourneyLabel } from "@/lib/checklist";
 import type { ClientChecklist, ClientJourneyType, MasterTemplate, TemplateJourneyType } from "@/lib/types";
 
@@ -52,6 +52,9 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
   const [createStatus, setCreateStatus] = useState<string | null>(null);
   const [editingAgreement, setEditingAgreement] = useState<string | null>(null);
   const [agreementLinkDraft, setAgreementLinkDraft] = useState("");
+  const [search, setSearch] = useState("");
+  const [filterJourney, setFilterJourney] = useState<ClientJourneyType | "">("");
+  const [filterAgreement, setFilterAgreement] = useState<"signed" | "unsigned" | "">("");
 
   const availableTemplates = useMemo(
     () => ({
@@ -60,6 +63,19 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
     }),
     [templates]
   );
+
+  const filteredClients = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return clients.filter((client) => {
+      if (q && !client.clientName.toLowerCase().includes(q) && !client.clientEmail?.toLowerCase().includes(q)) {
+        return false;
+      }
+      if (filterJourney && client.journeyType !== filterJourney) return false;
+      if (filterAgreement === "signed" && !client.agreementSigned) return false;
+      if (filterAgreement === "unsigned" && client.agreementSigned) return false;
+      return true;
+    });
+  }, [clients, search, filterJourney, filterAgreement]);
 
   function updateDraft<K extends keyof ClientDraft>(key: K, value: ClientDraft[K]) {
     setDraft((current) => ({
@@ -266,9 +282,54 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
       </section>
 
       <section className="rounded-lg border border-line bg-white p-5 shadow-soft">
-        <h2 className="text-sm font-bold uppercase text-ink/58">Client list</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-sm font-bold uppercase text-ink/58">Client list</h2>
+          <span className="text-xs text-ink/50">{filteredClients.length} of {clients.length}</span>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <div className="relative flex-1 min-w-[160px]">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink/40" />
+            <input
+              className="w-full rounded-md border border-line py-2 pl-8 pr-8 text-sm outline-none focus:border-accent"
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or email"
+              value={search}
+            />
+            {search ? (
+              <button type="button" onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+          </div>
+          <select
+            className="rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-accent"
+            onChange={(e) => setFilterJourney(e.target.value as ClientJourneyType | "")}
+            value={filterJourney}
+          >
+            <option value="">All journeys</option>
+            <option value="buyer">Buyer</option>
+            <option value="seller">Seller</option>
+            <option value="buyer_seller">Buyer + seller</option>
+          </select>
+          <select
+            className="rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-accent"
+            onChange={(e) => setFilterAgreement(e.target.value as "signed" | "unsigned" | "")}
+            value={filterAgreement}
+          >
+            <option value="">All statuses</option>
+            <option value="unsigned">Agreement pending</option>
+            <option value="signed">Agreement signed</option>
+          </select>
+        </div>
+
         <div className="mt-4 grid gap-3">
-          {clients.map((client) => (
+          {filteredClients.length === 0 ? (
+            <p className="rounded-lg border border-line px-4 py-6 text-center text-sm text-ink/50">
+              {clients.length === 0 ? "No clients yet — create one on the left." : "No clients match those filters."}
+            </p>
+          ) : null}
+          {filteredClients.map((client) => (
             <article key={client.id} className="rounded-lg border border-line p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
