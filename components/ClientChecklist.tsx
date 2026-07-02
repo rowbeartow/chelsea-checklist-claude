@@ -97,7 +97,7 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
     checklist.stages.some((stage) => stage.tasks.some((task) => task.taskRole === "sign_agreement"));
 
   return (
-    <main className="min-h-screen bg-cloud px-4 py-5 text-ink sm:px-6 lg:px-8">
+    <main className={clsx("min-h-screen bg-cloud px-4 py-5 text-ink sm:px-6 lg:px-8", needsAgreement && "pb-28")}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
         <header className="rounded-lg border border-line bg-white p-4 shadow-soft sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -176,30 +176,6 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
             </a>
           </div>
         </header>
-
-        {needsAgreement ? (
-          <div className="flex flex-col gap-3 rounded-lg border border-accent/30 bg-accentSoft px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-              <p className="text-sm leading-6 text-ink/80">
-                <span className="font-bold text-accent">Before Chelsea can show you homes</span> — Washington law requires a signed Buyer Brokerage Services Agreement. Stage 1 walks you through what it covers and why it's required.
-              </p>
-            </div>
-            {checklist.agreementLink ? (
-              <a
-                href={checklist.agreementLink}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex shrink-0 items-center gap-2 rounded-md border border-accent bg-white px-4 py-2 text-sm font-bold text-accent hover:bg-white/80"
-              >
-                Sign now
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            ) : (
-              <span className="shrink-0 text-xs font-semibold text-accent/80">Chelsea will send the Authentisign link by email</span>
-            )}
-          </div>
-        ) : null}
 
         <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
           <aside>
@@ -427,6 +403,37 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
           </section>
         </div>
       </div>
+
+      {needsAgreement ? (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-accent/20 bg-ink px-4 py-3 shadow-lg sm:px-6">
+          <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-sm font-bold text-white">
+                C
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">One step before Chelsea can show you homes</p>
+                <p className="text-xs text-white/62">Washington law requires a signed Buyer Brokerage Services Agreement. Stage 1 explains why.</p>
+              </div>
+            </div>
+            {checklist.agreementLink ? (
+              <a
+                href={checklist.agreementLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-bold text-white hover:bg-accent/90"
+              >
+                Sign the buyer agreement
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            ) : (
+              <div className="shrink-0 rounded-md border border-white/20 px-4 py-2.5 text-center text-xs font-semibold text-white/70">
+                Chelsea will send the Authentisign link to your email
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
