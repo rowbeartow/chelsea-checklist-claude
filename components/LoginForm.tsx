@@ -40,9 +40,8 @@ export function LoginForm({ nextPath }: LoginFormProps) {
       return;
     }
 
-    const destination = nextPath === "/admin" ? "/admin" : "/admin";
-
-    router.push(destination);
+    // next.js typed router needs a route literal; nextPath is server-validated to start with "/"
+    router.push(nextPath as Parameters<typeof router.push>[0]);
     router.refresh();
   }
 

@@ -28,6 +28,7 @@ type TemplatePayload = {
         html: string;
       };
       callChelseaNote?: string;
+      taskRole?: string;
       sortOrder: number;
       isRequired: boolean;
       archived?: boolean;
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
         rich_content_json: task.richContent.json,
         rich_content_html: task.richContent.html,
         call_chelsea_note: task.callChelseaNote || null,
+        task_role: task.taskRole === "sign_agreement" ? "sign_agreement" : null,
         sort_order: task.sortOrder,
         is_required: task.isRequired,
         archived_at: archivedAt(task.archived)

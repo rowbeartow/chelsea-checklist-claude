@@ -38,21 +38,23 @@ create policy "Users can read their own row"
 -- ── Vendors ──────────────────────────────────────────────────
 
 create table if not exists public.vendors (
-  id                 text primary key,
-  name               text not null,
-  category           text not null,
-  contact_name       text,
-  phone              text,
-  email              text,
-  website            text,
-  client_facing_note text not null default '',
-  service_area       text not null default '',
-  is_active          boolean not null default true,
-  site_domain        text,
-  site_favicon_url   text,
-  site_image_url     text,
-  sort_order         integer not null default 0,
-  created_at         timestamptz not null default now()
+  id                   text primary key,
+  name                 text not null,
+  category             text not null,
+  contact_name         text,
+  phone                text,
+  email                text,
+  website              text,
+  client_facing_note   text not null default '',
+  internal_notes       text not null default '',
+  service_area         text not null default '',
+  is_active            boolean not null default true,
+  site_domain          text,
+  site_favicon_url     text,
+  site_image_url       text,
+  metadata_fetched_at  timestamptz,
+  sort_order           integer not null default 0,
+  created_at           timestamptz not null default now()
 );
 
 alter table public.vendors enable row level security;
@@ -68,6 +70,7 @@ create table if not exists public.templates (
   name         text not null,
   journey_type text not null check (journey_type in ('buyer', 'seller')),
   version      integer not null default 1,
+  is_default   boolean not null default false,
   archived_at  timestamptz,
   created_at   timestamptz not null default now()
 );
