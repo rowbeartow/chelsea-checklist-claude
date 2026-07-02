@@ -272,6 +272,43 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
               </div>
             ) : null}
 
+            {needsAgreement && visibleStages[0]?.id === selectedStage?.id ? (
+              <div className="mt-5 overflow-hidden rounded-lg bg-ink">
+                <div className="p-5 sm:p-6">
+                  <div className="flex gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-white">
+                      C
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-white/45">A note from Chelsea</p>
+                      <p className="mt-1.5 text-base font-semibold leading-snug text-white sm:text-lg">
+                        {checklist.clientName.split(" ")[0]}, this is where we start.
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-white/68">
+                        I built this checklist to walk you through the home buying process step by step. Before I can show you homes, Washington state law requires a signed Buyer Brokerage Services Agreement — this stage explains what that means and why it actually protects you as the buyer.
+                      </p>
+                      <p className="mt-1.5 text-sm leading-6 text-white/68">
+                        Read through the steps below. When you&apos;re ready, you&apos;ll find the agreement link in Step 4 — or use the button at the bottom of this page.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                {checklist.agreementLink ? (
+                  <div className="border-t border-white/10 bg-white/5 px-5 py-3 sm:px-6">
+                    <a
+                      href={checklist.agreementLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent/90"
+                    >
+                      Sign the buyer agreement
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="mt-5 grid gap-3">
               {(() => {
                 const stageTasks = selectedStage.tasks;
