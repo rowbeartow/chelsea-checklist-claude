@@ -28,6 +28,7 @@ type TaskRow = {
   rich_content_json: Record<string, unknown>;
   rich_content_html: string;
   call_chelsea_note: string | null;
+  task_role: string | null;
   sort_order: number;
   is_required: boolean;
 };
@@ -42,6 +43,7 @@ function mapTask(row: TaskRow): ChecklistTask {
       html: row.rich_content_html
     },
     callChelseaNote: row.call_chelsea_note ?? undefined,
+    taskRole: row.task_role === "sign_agreement" ? "sign_agreement" : undefined,
     sortOrder: row.sort_order,
     isRequired: row.is_required,
     isComplete: false,
@@ -101,7 +103,7 @@ export async function getMasterTemplatesForAdmin(): Promise<MasterTemplate[]> {
     ? await supabase
         .from("tasks")
         .select(
-          "id, stage_id, title, helper_text, rich_content_json, rich_content_html, call_chelsea_note, sort_order, is_required"
+          "id, stage_id, title, helper_text, rich_content_json, rich_content_html, call_chelsea_note, task_role, sort_order, is_required"
         )
         .in("stage_id", stageIds)
         .is("archived_at", null)
