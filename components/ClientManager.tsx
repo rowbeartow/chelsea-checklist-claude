@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, Copy, ExternalLink, Link2, Plus, Search, X } from "lucide-react";
+import { Archive, Check, Copy, ExternalLink, Link2, Plus, RotateCcw, Search, X } from "lucide-react";
 import { getJourneyLabel } from "@/lib/checklist";
 import type { ClientChecklist, ClientJourneyType, MasterTemplate, TemplateJourneyType } from "@/lib/types";
 
@@ -55,6 +55,7 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
   const [search, setSearch] = useState("");
   const [filterJourney, setFilterJourney] = useState<ClientJourneyType | "">("");
   const [filterAgreement, setFilterAgreement] = useState<"signed" | "unsigned" | "">("");
+  const [showArchived, setShowArchived] = useState(false);
 
   const availableTemplates = useMemo(
     () => ({
@@ -64,9 +65,13 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
     [templates]
   );
 
+  const archivedCount = useMemo(() => clients.filter((c) => c.status === "archived").length, [clients]);
+
   const filteredClients = useMemo(() => {
     const q = search.trim().toLowerCase();
     return clients.filter((client) => {
+      if (!showArchived && client.status === "archived") return false;
+      if (showArchived && client.status !== "archived") return false;
       if (q && !client.clientName.toLowerCase().includes(q) && !client.clientEmail?.toLowerCase().includes(q)) {
         return false;
       }
@@ -75,7 +80,7 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
       if (filterAgreement === "unsigned" && client.agreementSigned) return false;
       return true;
     });
-  }, [clients, search, filterJourney, filterAgreement]);
+  }, [clients, search, filterJourney, filterAgreement, showArchived]);
 
   function updateDraft<K extends keyof ClientDraft>(key: K, value: ClientDraft[K]) {
     setDraft((current) => ({
@@ -176,6 +181,17 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ agreementSigned: !current })
+      });
+    } catch {}
+  }
+
+  async function setClientStatus(clientId: string, status: "active" | "archived") {
+    setClients((cs) => cs.map((c) => (c.id === clientId ? { ...c, status } : c)));
+    try {
+      await fetch(`/api/admin/clients/${clientId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status })
       });
     } catch {}
   }
@@ -284,7 +300,19 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
       <section className="rounded-lg border border-line bg-white p-5 shadow-soft">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-sm font-bold uppercase text-ink/58">Client list</h2>
-          <span className="text-xs text-ink/50">{filteredClients.length} of {clients.length}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-ink/50">{filteredClients.length} shown</span>
+            <button
+              type="button"
+              onClick={() => setShowArchived((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold transition ${
+                showArchived ? "bg-ink text-white" : "bg-cloud text-ink/60 hover:bg-line"
+              }`}
+            >
+              <Archive className="h-3 w-3" />
+              {showArchived ? "Viewing archived" : `Archived (${archivedCount})`}
+            </button>
+          </div>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -338,21 +366,36 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
                   <p className="mt-1 text-xs text-ink/52">{client.clientEmail || "No email yet"}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {client.status !== "archived" ? (
+                    <>
+                      <button
+                        className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-bold hover:border-ink"
+                        onClick={() => copyLink(client.privateLinkToken)}
+                        type="button"
+                      >
+                        <Copy className="h-4 w-4" />
+                        {copiedToken === client.privateLinkToken ? "Copied" : "Copy link"}
+                      </button>
+                      <Link
+                        className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-bold hover:border-ink"
+                        href={`/c/${client.privateLinkToken}` as `/c/${string}`}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Preview
+                      </Link>
+                    </>
+                  ) : null}
                   <button
-                    className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-bold hover:border-ink"
-                    onClick={() => copyLink(client.privateLinkToken)}
                     type="button"
+                    onClick={() => setClientStatus(client.id, client.status === "archived" ? "active" : "archived")}
+                    className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-bold text-ink/60 hover:border-ink hover:text-ink"
                   >
-                    <Copy className="h-4 w-4" />
-                    {copiedToken === client.privateLinkToken ? "Copied" : "Copy link"}
+                    {client.status === "archived" ? (
+                      <><RotateCcw className="h-4 w-4" />Restore</>
+                    ) : (
+                      <><Archive className="h-4 w-4" />Archive</>
+                    )}
                   </button>
-                  <Link
-                    className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-bold hover:border-ink"
-                    href={`/c/${client.privateLinkToken}`}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Preview
-                  </Link>
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-ink/58">

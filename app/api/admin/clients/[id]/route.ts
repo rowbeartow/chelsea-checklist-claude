@@ -5,6 +5,7 @@ import { createSupabaseAdminClient, isSupabaseAdminConfigured } from "@/lib/supa
 type PatchPayload = {
   agreementLink?: string | null;
   agreementSigned?: boolean;
+  status?: "active" | "archived";
 };
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -40,6 +41,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   if ("agreementSigned" in payload) {
     updates.agreement_signed = payload.agreementSigned;
+  }
+
+  if ("status" in payload) {
+    updates.status = payload.status;
   }
 
   if (!Object.keys(updates).length) {
