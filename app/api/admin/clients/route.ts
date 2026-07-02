@@ -9,6 +9,7 @@ type CreateClientPayload = {
   journeyType: ClientJourneyType;
   buyerTemplateId?: string;
   sellerTemplateId?: string;
+  agreementLink?: string;
 };
 
 function makeToken(name: string) {
@@ -68,7 +69,9 @@ export async function POST(request: NextRequest) {
       email: payload.email || null,
       journey_type: payload.journeyType,
       status: "active",
-      private_link_token: token
+      private_link_token: token,
+      agreement_link: payload.agreementLink || null,
+      agreement_signed: false
     })
     .select("id, private_link_token")
     .single();
@@ -153,7 +156,7 @@ export async function POST(request: NextRequest) {
 
       const { data: tasks, error: tasksError } = await supabase
         .from("tasks")
-        .select("id, title, helper_text, rich_content_json, rich_content_html, call_chelsea_note, sort_order, is_required")
+        .select("id, title, helper_text, rich_content_json, rich_content_html, call_chelsea_note, task_role, sort_order, is_required")
         .eq("stage_id", stage.id)
         .is("archived_at", null)
         .order("sort_order", { ascending: true });
@@ -170,6 +173,7 @@ export async function POST(request: NextRequest) {
         rich_content_json: task.rich_content_json,
         rich_content_html: task.rich_content_html,
         call_chelsea_note: task.call_chelsea_note,
+        task_role: (task as { task_role?: string | null }).task_role ?? null,
         sort_order: task.sort_order,
         is_required: task.is_required
       }));

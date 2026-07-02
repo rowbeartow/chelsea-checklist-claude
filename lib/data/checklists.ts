@@ -9,6 +9,8 @@ type ClientRow = {
   journey_type: ClientJourneyType;
   status: "draft" | "active" | "archived";
   private_link_token: string;
+  agreement_link: string | null;
+  agreement_signed: boolean;
 };
 
 type ChecklistRow = {
@@ -37,6 +39,7 @@ type ClientTaskRow = {
   rich_content_json: Record<string, unknown>;
   rich_content_html: string;
   call_chelsea_note: string | null;
+  task_role: string | null;
   sort_order: number;
   is_required: boolean;
 };
@@ -60,6 +63,7 @@ function mapClientTask(row: ClientTaskRow, progressRows: ProgressRow[]): Checkli
       html: row.rich_content_html
     },
     callChelseaNote: row.call_chelsea_note ?? undefined,
+    taskRole: row.task_role === "sign_agreement" ? "sign_agreement" : undefined,
     sortOrder: row.sort_order,
     isRequired: row.is_required,
     isComplete: Boolean(progressRows.find((progress) => progress.client_task_override_id === row.id)?.is_complete),
@@ -93,7 +97,7 @@ export async function getClientChecklistByToken(token: string): Promise<ClientCh
 
   const { data: clientRow, error: clientError } = await supabase
     .from("clients")
-    .select("id, name, email, journey_type, status, private_link_token")
+    .select("id, name, email, journey_type, status, private_link_token, agreement_link, agreement_signed")
     .eq("private_link_token", token)
     .single();
 
@@ -129,7 +133,7 @@ export async function getClientChecklistByToken(token: string): Promise<ClientCh
   const { data: taskRows, error: taskError } = await supabase
     .from("client_task_overrides")
     .select(
-      "id, client_stage_override_id, title, helper_text, rich_content_json, rich_content_html, call_chelsea_note, sort_order, is_required"
+      "id, client_stage_override_id, title, helper_text, rich_content_json, rich_content_html, call_chelsea_note, task_role, sort_order, is_required"
     )
     .in("client_stage_override_id", stageIds)
     .is("archived_at", null)
@@ -162,13 +166,17 @@ export async function getClientChecklistByToken(token: string): Promise<ClientCh
       )
     );
 
+  const client = clientRow as ClientRow;
+
   return {
     id: (checklistRow as ChecklistRow).id,
-    privateLinkToken: (clientRow as ClientRow).private_link_token,
-    clientName: (clientRow as ClientRow).name,
-    clientEmail: (clientRow as ClientRow).email ?? undefined,
-    journeyType: (clientRow as ClientRow).journey_type,
+    privateLinkToken: client.private_link_token,
+    clientName: client.name,
+    clientEmail: client.email ?? undefined,
+    journeyType: client.journey_type,
     status: (checklistRow as ChecklistRow).status === "archived" ? "archived" : "active",
+    agreementLink: client.agreement_link ?? undefined,
+    agreementSigned: Boolean(client.agreement_signed),
     stages
   };
 }

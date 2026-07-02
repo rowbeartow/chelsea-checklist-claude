@@ -21,6 +21,7 @@ import {
   UsersRound
 } from "lucide-react";
 import { getJourneyLabel } from "@/lib/checklist";
+import { CHELSEA_BUSINESS, CHELSEA_EMAIL, CHELSEA_NAME, CHELSEA_PHONE } from "@/lib/config";
 import type { ChecklistStage, ChecklistTask, ClientChecklist, MasterTemplate, Vendor } from "@/lib/types";
 import { RichContent } from "@/components/RichContent";
 import { RichTextEditor } from "@/components/RichTextEditor";
@@ -386,13 +387,25 @@ export function AdminTemplateEditor({
             })}
           </nav>
 
-          <Link
-            href="/c/demo-buyer"
-            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-bold hover:border-ink"
-          >
-            <Eye className="h-4 w-4" />
-            Preview client view
-          </Link>
+          <div className="mt-5 grid gap-2">
+            <p className="px-1 text-[10px] font-bold uppercase tracking-wider text-ink/42">Demo previews</p>
+            {(
+              [
+                { href: "/c/demo-buyer", label: "Buyer checklist" },
+                { href: "/c/demo-seller", label: "Seller checklist" },
+                { href: "/c/demo-buyer-seller", label: "Buyer + seller" }
+              ] as const
+            ).map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="inline-flex w-full items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-bold hover:border-ink"
+              >
+                <Eye className="h-4 w-4" />
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </aside>
 
         <section className="grid gap-5">
@@ -825,105 +838,81 @@ export function AdminTemplateEditor({
   );
 }
 
-type SettingsState = {
-  name: string;
-  email: string;
-  phone: string;
-  business: string;
-};
-
-const SETTINGS_KEY = "chelsea-settings";
-
-function loadSettings(): SettingsState {
-  if (typeof window === "undefined") {
-    return { name: "", email: "", phone: "", business: "" };
+const CONFIG_FIELDS = [
+  {
+    envVar: "NEXT_PUBLIC_CHELSEA_NAME",
+    label: "Your name",
+    hint: "Used in client-facing greetings and the sticky agreement bar.",
+    liveValue: CHELSEA_NAME
+  },
+  {
+    envVar: "NEXT_PUBLIC_CHELSEA_EMAIL",
+    label: "Your email",
+    hint: "Powers the 'Ask Chelsea' button on client checklists.",
+    liveValue: CHELSEA_EMAIL
+  },
+  {
+    envVar: "NEXT_PUBLIC_CHELSEA_PHONE",
+    label: "Your phone",
+    hint: "Reserved for future use (SMS/call links on mobile).",
+    liveValue: CHELSEA_PHONE
+  },
+  {
+    envVar: "NEXT_PUBLIC_CHELSEA_BUSINESS",
+    label: "Business name",
+    hint: "Shown in the client checklist header.",
+    liveValue: CHELSEA_BUSINESS
   }
-  try {
-    const saved = localStorage.getItem(SETTINGS_KEY);
-    return saved ? (JSON.parse(saved) as SettingsState) : { name: "", email: "", phone: "", business: "" };
-  } catch {
-    return { name: "", email: "", phone: "", business: "" };
-  }
-}
+];
 
 function SettingsPanel() {
-  const [settings, setSettings] = useState<SettingsState>(() => loadSettings());
-  const [saved, setSaved] = useState(false);
-
-  function update(key: keyof SettingsState, value: string) {
-    setSettings((current) => ({ ...current, [key]: value }));
-    setSaved(false);
-  }
-
-  function save() {
-    try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-      setSaved(true);
-    } catch {}
-  }
-
-  const fields: { key: keyof SettingsState; label: string; hint: string; envVar: string; type?: string }[] = [
-    { key: "name", label: "Your name", hint: "Used in client-facing greetings and the sticky agreement bar.", envVar: "NEXT_PUBLIC_CHELSEA_NAME" },
-    { key: "email", label: "Your email", hint: "Powers the 'Ask Chelsea' button on client checklists.", envVar: "NEXT_PUBLIC_CHELSEA_EMAIL", type: "email" },
-    { key: "phone", label: "Your phone", hint: "Reserved for future use (e.g. SMS/call links on mobile).", envVar: "NEXT_PUBLIC_CHELSEA_PHONE", type: "tel" },
-    { key: "business", label: "Business name", hint: "Shown in the client checklist header.", envVar: "NEXT_PUBLIC_CHELSEA_BUSINESS" }
-  ];
-
   return (
     <section className="grid gap-5">
       <header className="rounded-lg border border-line bg-white p-5 shadow-soft">
         <p className="text-sm font-semibold text-accent">Settings</p>
         <h1 className="mt-1 text-3xl font-semibold">Workspace settings</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-ink/68">
-          Configure your contact info and branding. Values saved here are stored locally in this browser. For permanent
-          production values, set the corresponding environment variables in your{" "}
-          <code className="rounded bg-cloud px-1 font-mono text-xs">.env.local</code> file (or Railway dashboard).
+          Branding and contact info is set via environment variables so values are consistent for every visitor. Set
+          them in <code className="rounded bg-cloud px-1 font-mono text-xs">.env.local</code> for local dev or in the
+          Railway dashboard for production, then redeploy.
         </p>
       </header>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
         <section className="rounded-lg border border-line bg-white p-5 shadow-soft">
-          <h2 className="text-sm font-bold uppercase text-ink/58">Agent profile</h2>
+          <h2 className="text-sm font-bold uppercase text-ink/58">Current live values</h2>
+          <p className="mt-2 text-sm text-ink/60">These are the values the app is using right now.</p>
           <div className="mt-4 grid gap-4">
-            {fields.map((field) => (
-              <label key={field.key} className="grid gap-2 text-sm font-bold">
-                {field.label}
-                <input
-                  className="rounded-md border border-line px-3 py-2 text-sm font-normal outline-none focus:border-accent"
-                  onChange={(e) => update(field.key, e.target.value)}
-                  placeholder={`Set via ${field.envVar}`}
-                  type={field.type ?? "text"}
-                  value={settings[field.key]}
-                />
-                <span className="text-xs font-normal text-ink/55">{field.hint}</span>
-              </label>
+            {CONFIG_FIELDS.map((field) => (
+              <div key={field.envVar} className="grid gap-1.5">
+                <p className="text-sm font-bold">{field.label}</p>
+                <div className="flex items-center gap-2 rounded-md border border-line bg-cloud px-3 py-2">
+                  {field.liveValue ? (
+                    <span className="text-sm text-ink">{field.liveValue}</span>
+                  ) : (
+                    <span className="text-sm italic text-ink/40">Not set — using default</span>
+                  )}
+                </div>
+                <p className="text-xs text-ink/50">{field.hint}</p>
+              </div>
             ))}
-          </div>
-          <div className="mt-5 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={save}
-              className="inline-flex items-center gap-2 rounded-md border border-accent bg-white px-4 py-2 text-sm font-bold text-accent hover:bg-accentSoft"
-            >
-              <Save className="h-4 w-4" />
-              Save locally
-            </button>
-            {saved ? <span className="text-sm font-semibold text-success">Saved to this browser</span> : null}
           </div>
         </section>
 
         <section className="rounded-lg border border-line bg-white p-5 shadow-soft">
-          <h2 className="text-sm font-bold uppercase text-ink/58">Permanent config</h2>
+          <h2 className="text-sm font-bold uppercase text-ink/58">How to configure</h2>
           <p className="mt-3 text-sm leading-6 text-ink/68">
-            To make settings permanent across browsers and deploys, add these to your{" "}
-            <code className="rounded bg-cloud px-1 font-mono text-xs">.env.local</code>:
+            Add these to your <code className="rounded bg-cloud px-1 font-mono text-xs">.env.local</code> file:
           </p>
-          <pre className="mt-3 overflow-x-auto rounded-lg bg-ink p-4 text-xs leading-6 text-white/80">
-            {fields.map((field) => `NEXT_PUBLIC_${field.envVar.replace("NEXT_PUBLIC_", "")}="your value"\n`).join("")}
-          </pre>
-          <p className="mt-3 text-xs text-ink/55">
-            On Railway: set these as environment variables in your service dashboard, then redeploy.
+          <pre className="mt-3 overflow-x-auto rounded-lg bg-ink p-4 text-xs leading-6 text-white/80">{CONFIG_FIELDS.map((f) => `${f.envVar}="your value"`).join("\n")}</pre>
+          <p className="mt-4 text-xs leading-5 text-ink/55">
+            On Railway: add these as environment variables in your service settings, then trigger a redeploy. Changes
+            take effect immediately on the next build.
           </p>
+          <div className="mt-4 rounded-md border border-line bg-cloud px-3 py-2 text-xs text-ink/60">
+            <strong className="text-ink/80">Why env vars?</strong> These values are baked in at build time so
+            client pages render correctly server-side without any extra fetch.
+          </div>
         </section>
       </div>
     </section>
