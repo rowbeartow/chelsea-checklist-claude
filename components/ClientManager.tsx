@@ -243,19 +243,17 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
               </select>
             </label>
           )}
-          {(draft.journeyType === "buyer" || draft.journeyType === "buyer_seller") && (
-            <label className="grid gap-2 text-sm font-bold">
-              Authentisign link
-              <input
-                className="rounded-md border border-line px-3 py-2 text-sm font-normal outline-none focus:border-accent"
-                onChange={(event) => updateDraft("agreementLink", event.target.value)}
-                placeholder="Paste from Authentisign (optional)"
-                type="url"
-                value={draft.agreementLink}
-              />
-              <span className="text-xs font-normal text-ink/55">Can be added later after you set up the document in Authentisign</span>
-            </label>
-          )}
+          <label className="grid gap-2 text-sm font-bold">
+            {draft.journeyType === "seller" ? "Listing agreement link" : "Buyer agreement link"}
+            <input
+              className="rounded-md border border-line px-3 py-2 text-sm font-normal outline-none focus:border-accent"
+              onChange={(event) => updateDraft("agreementLink", event.target.value)}
+              placeholder="Paste from Authentisign (optional)"
+              type="url"
+              value={draft.agreementLink}
+            />
+            <span className="text-xs font-normal text-ink/55">Can be added later after you set up the document in Authentisign</span>
+          </label>
           <button
             className="inline-flex items-center justify-center gap-2 rounded-md border border-accent px-4 py-2 text-sm font-bold text-accent hover:bg-accentSoft"
             type="submit"
@@ -304,66 +302,66 @@ export function ClientManager({ initialClients, templates }: ClientManagerProps)
                 <span className="rounded-md bg-cloud px-2 py-1 capitalize">{client.journeyType.replace("_", " + ")} journey</span>
               </div>
 
-              {(client.journeyType === "buyer" || client.journeyType === "buyer_seller") && (
-                <div className="mt-3 border-t border-line pt-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => toggleAgreementSigned(client.id, Boolean(client.agreementSigned))}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold transition ${
-                        client.agreementSigned
-                          ? "bg-successSoft text-success"
-                          : "bg-warningSoft text-warning"
-                      }`}
-                    >
-                      {client.agreementSigned ? (
-                        <><Check className="h-3 w-3" /> Agreement signed</>
-                      ) : (
-                        "Agreement not signed"
-                      )}
-                    </button>
-
-                    {editingAgreement === client.id ? (
-                      <div className="flex flex-1 items-center gap-2">
-                        <input
-                          autoFocus
-                          className="min-w-0 flex-1 rounded-md border border-line px-2 py-1 text-xs outline-none focus:border-accent"
-                          onChange={(e) => setAgreementLinkDraft(e.target.value)}
-                          placeholder="Paste Authentisign link"
-                          type="url"
-                          value={agreementLinkDraft}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => saveAgreement(client.id)}
-                          className="rounded-md border border-accent px-2 py-1 text-xs font-bold text-accent hover:bg-accentSoft"
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingAgreement(null)}
-                          className="text-xs text-ink/50 hover:text-ink"
-                        >
-                          Cancel
-                        </button>
-                      </div>
+              <div className="mt-3 border-t border-line pt-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleAgreementSigned(client.id, Boolean(client.agreementSigned))}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold transition ${
+                      client.agreementSigned
+                        ? "bg-successSoft text-success"
+                        : "bg-warningSoft text-warning"
+                    }`}
+                  >
+                    {client.agreementSigned ? (
+                      <><Check className="h-3 w-3" /> {client.journeyType === "seller" ? "Listing agreement signed" : "Agreement signed"}</>
                     ) : (
+                      client.journeyType === "seller" ? "Listing agreement not signed" : "Agreement not signed"
+                    )}
+                  </button>
+
+                  {editingAgreement === client.id ? (
+                    <div className="flex flex-1 items-center gap-2">
+                      <input
+                        autoFocus
+                        className="min-w-0 flex-1 rounded-md border border-line px-2 py-1 text-xs outline-none focus:border-accent"
+                        onChange={(e) => setAgreementLinkDraft(e.target.value)}
+                        placeholder="Paste Authentisign link"
+                        type="url"
+                        value={agreementLinkDraft}
+                      />
                       <button
                         type="button"
-                        onClick={() => {
-                          setEditingAgreement(client.id);
-                          setAgreementLinkDraft(client.agreementLink ?? "");
-                        }}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-ink/50 hover:text-accent"
+                        onClick={() => saveAgreement(client.id)}
+                        className="rounded-md border border-accent px-2 py-1 text-xs font-bold text-accent hover:bg-accentSoft"
                       >
-                        <Link2 className="h-3 w-3" />
-                        {client.agreementLink ? "Edit Authentisign link" : "Add Authentisign link"}
+                        Save
                       </button>
-                    )}
-                  </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingAgreement(null)}
+                        className="text-xs text-ink/50 hover:text-ink"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingAgreement(client.id);
+                        setAgreementLinkDraft(client.agreementLink ?? "");
+                      }}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-ink/50 hover:text-accent"
+                    >
+                      <Link2 className="h-3 w-3" />
+                      {client.agreementLink
+                        ? client.journeyType === "seller" ? "Edit listing agreement link" : "Edit buyer agreement link"
+                        : client.journeyType === "seller" ? "Add listing agreement link" : "Add buyer agreement link"}
+                    </button>
+                  )}
                 </div>
-              )}
+              </div>
             </article>
           ))}
         </div>

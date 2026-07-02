@@ -14,6 +14,7 @@ import {
   UserRound
 } from "lucide-react";
 import { getJourneyLabel, getProgress, resolveRecommendations } from "@/lib/checklist";
+import { CHELSEA_EMAIL, CHELSEA_NAME } from "@/lib/config";
 import type { ClientChecklist as ClientChecklistType } from "@/lib/types";
 import type { TemplateJourneyType } from "@/lib/types";
 import { RichContent } from "@/components/RichContent";
@@ -91,9 +92,10 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
 
   const currentStage = visibleStages.find((stage) => stage.isCurrent) ?? visibleStages[0] ?? checklist.stages[0];
 
+  const isBuyerJourney = checklist.journeyType === "buyer" || checklist.journeyType === "buyer_seller";
+
   const needsAgreement =
     !checklist.agreementSigned &&
-    (checklist.journeyType === "buyer" || checklist.journeyType === "buyer_seller") &&
     checklist.stages.some((stage) => stage.tasks.some((task) => task.taskRole === "sign_agreement"));
 
   return (
@@ -167,13 +169,15 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                 <div className="h-full rounded-full bg-success" style={{ width: `${progress.percent}%` }} />
               </div>
             </div>
-            <a
-              href="mailto:chelsea@example.com"
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-accent bg-white px-4 py-2 text-sm font-bold text-accent hover:bg-accentSoft"
-            >
-              <MessageCircle className="h-4 w-4" />
-              Ask Chelsea
-            </a>
+            {CHELSEA_EMAIL ? (
+              <a
+                href={`mailto:${CHELSEA_EMAIL}`}
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-accent bg-white px-4 py-2 text-sm font-bold text-accent hover:bg-accentSoft"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Ask {CHELSEA_NAME}
+              </a>
+            ) : null}
           </div>
         </header>
 
@@ -372,14 +376,16 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                                   rel="noreferrer"
                                   className="inline-flex items-center gap-2 rounded-md border border-accent bg-white px-4 py-2 text-sm font-bold text-accent hover:bg-white/80"
                                 >
-                                  Sign with Chelsea via Authentisign
+                                  {isBuyerJourney
+                                    ? `Sign with ${CHELSEA_NAME} via Authentisign`
+                                    : `Sign the listing agreement via Authentisign`}
                                   <ExternalLink className="h-3.5 w-3.5" />
                                 </a>
                                 <span className="text-xs text-ink/60">Takes about two minutes</span>
                               </div>
                             ) : (
                               <p className="mt-1 text-sm text-ink/72">
-                                Chelsea will send the agreement to your email via Authentisign. Check your inbox — it takes about two minutes to complete.
+                                {CHELSEA_NAME} will send the agreement to your email via Authentisign. Check your inbox — it takes about two minutes to complete.
                               </p>
                             )}
                           </div>
@@ -416,11 +422,19 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
           <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-sm font-bold text-white">
-                C
+                {CHELSEA_NAME[0]}
               </div>
               <div>
-                <p className="text-sm font-bold text-white">One step before Chelsea can show you homes</p>
-                <p className="text-xs text-white/62">Washington law requires a signed Buyer Brokerage Services Agreement. Stage 1 explains why.</p>
+                <p className="text-sm font-bold text-white">
+                  {isBuyerJourney
+                    ? `One step before ${CHELSEA_NAME} can show you homes`
+                    : `One step before ${CHELSEA_NAME} can list your home`}
+                </p>
+                <p className="text-xs text-white/62">
+                  {isBuyerJourney
+                    ? "Washington law requires a signed Buyer Brokerage Services Agreement. Stage 1 explains why."
+                    : `${CHELSEA_NAME} needs a signed Listing Agreement before your home goes on the market. Stage 1 covers the details.`}
+                </p>
               </div>
             </div>
             {checklist.agreementLink ? (
@@ -430,12 +444,12 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                 rel="noreferrer"
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-bold text-white hover:bg-accent/90"
               >
-                Sign the buyer agreement
+                {isBuyerJourney ? "Sign the buyer agreement" : "Sign the listing agreement"}
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             ) : (
               <div className="shrink-0 rounded-md border border-white/20 px-4 py-2.5 text-center text-xs font-semibold text-white/70">
-                Chelsea will send the Authentisign link to your email
+                {CHELSEA_NAME} will send the Authentisign link to your email
               </div>
             )}
           </div>
