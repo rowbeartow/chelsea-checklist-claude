@@ -91,6 +91,7 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
   }, [checklist, checkedTasks, visibleStages]);
 
   const currentStage = visibleStages.find((stage) => stage.isCurrent) ?? visibleStages[0] ?? checklist.stages[0];
+  const allDone = progress.percent === 100 && progress.total > 0;
 
   const isBuyerJourney = checklist.journeyType === "buyer" || checklist.journeyType === "buyer_seller";
 
@@ -157,28 +158,51 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
             </div>
           ) : null}
 
-          <div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-            <div>
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-ink/70">Current stage: {currentStage?.title}</p>
-                <p className="text-sm font-bold text-ink">
-                  {progress.complete} of {progress.total} complete
+          {allDone ? (
+            <div className="mt-5 flex items-center gap-4 rounded-lg border border-success/40 bg-successSoft px-4 py-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success text-white">
+                <Check className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-success">You&apos;re all done, {checklist.clientName.split(" ")[0]}!</p>
+                <p className="mt-0.5 text-sm text-success/80">
+                  Every step is complete. {CHELSEA_NAME} will be in touch to confirm your next milestone.
                 </p>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-line">
-                <div className="h-full rounded-full bg-success" style={{ width: `${progress.percent}%` }} />
-              </div>
+              {CHELSEA_EMAIL ? (
+                <a
+                  href={`mailto:${CHELSEA_EMAIL}`}
+                  className="hidden shrink-0 items-center gap-2 rounded-md border border-success bg-white px-3 py-2 text-sm font-bold text-success hover:bg-successSoft sm:inline-flex"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Message {CHELSEA_NAME}
+                </a>
+              ) : null}
             </div>
-            {CHELSEA_EMAIL ? (
-              <a
-                href={`mailto:${CHELSEA_EMAIL}`}
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-accent bg-white px-4 py-2 text-sm font-bold text-accent hover:bg-accentSoft"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Ask {CHELSEA_NAME}
-              </a>
-            ) : null}
-          </div>
+          ) : (
+            <div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-ink/70">Current stage: {currentStage?.title}</p>
+                  <p className="text-sm font-bold text-ink">
+                    {progress.complete} of {progress.total} complete
+                  </p>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-line">
+                  <div className="h-full rounded-full bg-success transition-all duration-500" style={{ width: `${progress.percent}%` }} />
+                </div>
+              </div>
+              {CHELSEA_EMAIL ? (
+                <a
+                  href={`mailto:${CHELSEA_EMAIL}`}
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-accent bg-white px-4 py-2 text-sm font-bold text-accent hover:bg-accentSoft"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Ask {CHELSEA_NAME}
+                </a>
+              ) : null}
+            </div>
+          )}
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
@@ -295,10 +319,24 @@ export function ClientChecklist({ checklist }: ClientChecklistProps) {
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success text-white">
                           <Check className="h-4 w-4" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="text-sm font-bold text-success">Stage complete</p>
                           <p className="text-xs text-success/80">All tasks in this stage are done.</p>
                         </div>
+                        {(() => {
+                          const idx = visibleStages.findIndex((s) => s.id === selectedStage.id);
+                          const next = visibleStages[idx + 1];
+                          return next && !allDone ? (
+                            <button
+                              type="button"
+                              onClick={() => { setSelectedStageId(next.id); setOpenStage(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                              className="shrink-0 inline-flex items-center gap-1.5 rounded-md border border-success bg-white px-3 py-1.5 text-xs font-bold text-success hover:bg-successSoft"
+                            >
+                              Next stage
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          ) : null;
+                        })()}
                       </div>
                     ) : null}
                     {stageTasks.map((task) => {

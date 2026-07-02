@@ -783,6 +783,21 @@ export function AdminTemplateEditor({
                           />
                           Required task
                         </label>
+                        <label className="flex items-center gap-2 text-sm font-bold">
+                          <input
+                            checked={selectedTask.taskRole === "sign_agreement"}
+                            className="h-4 w-4 accent-accent"
+                            onChange={(event) =>
+                              updateSelectedTask((task) => ({
+                                ...task,
+                                taskRole: event.target.checked ? "sign_agreement" : undefined
+                              }))
+                            }
+                            type="checkbox"
+                          />
+                          Agreement signing task
+                          <span className="text-xs font-normal text-ink/50">triggers sticky bar + signing CTA</span>
+                        </label>
                         <label className="grid gap-2 text-sm font-bold">
                           When to call Chelsea note
                           <textarea
